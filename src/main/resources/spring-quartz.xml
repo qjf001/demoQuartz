@@ -1,0 +1,90 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+  http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
+
+    <!-- 因为scheduler bean的实例化后查询t_qrtz_scheduler_state，t_qrtz_triggers表中的数据确定每任务的触发次数，然后去触发任务 -->
+    <!-- depends-on ,在执行任务时，某些job实例及job实例依赖的实例需要用到ConstantsConfigurer中的静态变量，而ConstantsConfigurer中的静态变量中的值需要通过applicationInstantiation实例赋值，
+      因此scheduler实例的创建需要在applicationInstantiation实例之后，可用通过在scheduler bean添加depends-on参数来控制-->
+    <!-- quartz持久化存储  -->
+    <!--SchedulerFactoryBean 会根据StdSchedulerFactory创建一个StdScheduler实例，
+    该实例持有一个私有化QuartzScheduler sched对象，并实现了Scheduler接口（接口中的实现是通过调用QuartzScheduler sched对象的相关方法）-->
+    <!-- QuartzScheduler sched对象的shutdown方法执行后，该实例的其它功能将彻底停止并且不能重新启动（不能通过start方法重启），
+      standby() 可以使集群中的当前实例暂停，并且可以通过start方法重启该调度实例-->
+    <bean id="scheduler"
+          class="org.springframework.scheduling.quartz.SchedulerFactoryBean" >
+        <!--<property name="dataSource" ref="dataSource"/>-->
+        <!-- job 中需要注入spring bean , 可以采用三种方式:(job每次的调用都是不同的对象，由jobFactory创建)
+        1、覆盖jobFactory，并注入到 SchedulerFactoryBean；
+        2、使用schedulerContextAsMap注入springbean
+        3、在quartzProperties种设置applicationContextSchedulerContextKey属性，将ApplicationContext绑定到job的JobExecutionContext中
+        在job中jobExecutionContext.getScheduler().getContext().get("applicationContextKey") 强转成ApplicationContext，
+        然后使用ApplicationContext获取spring管理的bean -->
+        <!-- 重写了jobFactory中创建job实例的方法，引入spring注解，通过spring注解注入springbean -->
+         <property name="jobFactory" ref="jobFactory"/>
+        <!-- 将spring管理的bean直接绑定到scheduler 上下文中，在job中通过scheduler上下文可以货到springbean -->
+        <!--<property name="schedulerContextAsMap">
+            <map>
+                <description>schedulerContextAsMap</description>
+                <entry key="jt" value-ref="jdbcTemplate"/>
+            </map>
+        </property>-->
+        <!--方式一 : quartz.properties配置文件是放在classpath下
+       <property name="configLocation" value="classpath:quartz.properties" /> -->
+
+        <!--方式二 : quartz.properties配置文件是放在WEB-INF下
+       <property name="configLocation" value="/WEB-INF/quartz.properties" /> -->
+
+        <!--方式三 : quartz.properties配置文件写入到配置XML中 -->
+        <property name="quartzProperties">
+            <props>
+                <!--调度器属性-->
+                <!--调度器的实例名,用来在用到多个调度器区分特定的调度器实例。多个调度器通常用在集群环境中,缺省值：DefaultQuartzScheduler-->
+                <prop key="org.quartz.scheduler.instanceName">quartzScheduler</prop>
+                <!--在所有调度器实例中是唯一的，尤其是在一个集群当中,设置为auto时quartz自动生成该值-->
+                <prop key="org.quartz.scheduler.instanceId">AUTO</prop>
+                <!--线程池属性-->
+                <!-- Quartz 自带的线程池实现类 -->
+                <prop key="org.quartz.threadPool.class">org.quartz.simpl.SimpleThreadPool</prop>
+                <!-- 工作线程数量，于job数量成正比-->
+                <prop key="org.quartz.threadPool.threadCount">7</prop>
+                <!-- 工作者线程的优先级,最大值10，最小是1，正常值是5，默认值是5 -->
+                <prop key="org.quartz.threadPool.threadPriority">5</prop>
+                <!-- 容许的最大作业延长时间,某个任务到达执行时间，而此时线程池中没有可用线程时，任务等待的最大时间 -->
+                <prop key="org.quartz.jobStore.misfireThreshold">60000</prop>
+
+                <!-- 持久化配置 -->
+                <prop key="org.quartz.jobStore.class">org.quartz.impl.jdbcjobstore.JobStoreTX</prop>
+                <prop key="org.quartz.jobStore.driverDelegateClass">org.quartz.impl.jdbcjobstore.StdJDBCDelegate</prop>
+
+                <prop key="org.quartz.jobStore.dataSource">quartzDataSource</prop>
+                <prop key="org.quartz.dataSource.quartzDataSource.driver">${jdbc.driver}</prop>
+                <prop key="org.quartz.dataSource.quartzDataSource.URL">${jdbc.url}</prop>
+                <prop key="org.quartz.dataSource.quartzDataSource.user">${jdbc.username}</prop>
+                <prop key="org.quartz.dataSource.quartzDataSource.password">${jdbc.password}</prop>
+                <!--配置连接数据库连接池大小，一般为上面配置的线程池的2倍-->
+                <prop key="org.quartz.dataSource.quartzDataSource.maxConnections">14</prop>
+                <!-- linux环境下表名称大小写敏感 -->
+                <prop key="org.quartz.jobStore.selectWithLockSQL">SELECT * FROM {0}LOCKS UPDLOCK WHERE LOCK_NAME = ? FOR UPDATE</prop>
+                <!--表的前缀-->
+                <prop key="org.quartz.jobStore.tablePrefix">t_qrtz_</prop>
+                <!--加入集群 , 如果你有多个 Quartz 实例在用同一套数据库时，这个属性就必须设置为 true。-->
+                <prop key="org.quartz.jobStore.isClustered">true</prop>
+                <!--集群中服务器相互检测间隔，每台服务器都会按照下面配置的时间间隔往服务器中更新自己的状态，
+                如果某台服务器超过以下时间没有checkin，调度器就会认为该台服务器已经down掉，不会再分配任务给该台服务器 -->
+                <prop key="org.quartz.jobStore.clusterCheckinInterval">20000</prop>
+                <!-- 设置事务隔离级别为Serializable严格的串行级事务，默认值为true -->
+                <prop key="org.quartz.jobStore.txIsolationLevelSerializable">true</prop>
+            </props>
+        </property>
+        <!-- 将 applicationContext 绑定到 scheduler 的上下文中，在job中可以获取scheduler的上下文，
+        进而通过applicationContextSchedulerContextKey设定的value值get到 applicationContext，
+        然后使用applicationContext可以获得到spring管理的bean-->
+        <property name="applicationContextSchedulerContextKey" value="applicationContextKey"/>
+        <!-- 是否自动启动，该Bean被初始化后是否自动启动定时任务 -->
+        <property name="autoStartup" value="true"/>
+        <!-- 延迟启动，单位为秒，默认0，小于等于0立即启动，线程休眠N秒后启动-->
+        <property name="startupDelay" value="30"/>
+    </bean>
+    <bean id="jobFactory" class="com.qjf.quartz.CustomJobFactory"/>
+</beans>
