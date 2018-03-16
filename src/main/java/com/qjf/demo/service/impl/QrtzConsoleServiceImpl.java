@@ -79,20 +79,25 @@ public class QrtzConsoleServiceImpl extends ServiceImpl<QrtzConsoleMapper, QrtzC
     }
 
     public void startSchedule(QrtzConsole qc) throws ParseException, SchedulerException, ClassNotFoundException {
+        String cron = qc.getCron().trim();
+        String name = qc.getNameEn()+cron;
         JobDetailImpl jobdetail = new JobDetailImpl();
-        jobdetail.setName(qc.getNameEn());
+        jobdetail.setName(name);
         jobdetail.setJobClass((Class<? extends Job>) Class.forName(qc.getFullClassName()));
+
         CronTriggerImpl trigger = new CronTriggerImpl();
-        trigger.setName(qc.getNameEn());
-        trigger.setCronExpression(qc.getCron());
+        trigger.setName(name);
+        trigger.setCronExpression(cron);
+        trigger.setMisfireInstruction(CronTriggerImpl.MISFIRE_INSTRUCTION_DO_NOTHING);
         scheduler.scheduleJob(jobdetail, trigger);
     }
 
     /**移除一个任务和触发器 */
     public void removeJob(QrtzConsole qc) throws SchedulerException{
-        scheduler.pauseTrigger(new TriggerKey(qc.getNameEn()));//停止触发器
-        scheduler.unscheduleJob(new TriggerKey(qc.getNameEn()));//移除触发器
-        scheduler.deleteJob(new JobKey(qc.getNameEn()));//删除任务
+        String name = qc.getNameEn()+qc.getCron();
+        scheduler.pauseTrigger(new TriggerKey(name));//停止触发器
+        scheduler.unscheduleJob(new TriggerKey(name));//移除触发器
+        scheduler.deleteJob(new JobKey(name));//删除任务
     }
 
 }

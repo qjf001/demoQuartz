@@ -51,7 +51,7 @@
                 <!-- 工作者线程的优先级,最大值10，最小是1，正常值是5，默认值是5 -->
                 <prop key="org.quartz.threadPool.threadPriority">5</prop>
                 <!-- 容许的最大作业延长时间,某个任务到达执行时间，而此时线程池中没有可用线程时，任务等待的最大时间 -->
-                <prop key="org.quartz.jobStore.misfireThreshold">60000</prop>
+                <prop key="org.quartz.jobStore.misfireThreshold">10000</prop>
 
                 <!-- 持久化配置 -->
                 <prop key="org.quartz.jobStore.class">org.quartz.impl.jdbcjobstore.JobStoreTX</prop>
@@ -84,7 +84,7 @@
         <!-- 是否自动启动，该Bean被初始化后是否自动启动定时任务 -->
         <property name="autoStartup" value="true"/>
         <!-- 延迟启动，单位为秒，默认0，小于等于0立即启动，线程休眠N秒后启动-->
-        <property name="startupDelay" value="30"/>
+        <property name="startupDelay" value="10"/>
     </bean>
     <bean id="jobFactory" class="com.qjf.quartz.CustomJobFactory"/>
 </beans>
