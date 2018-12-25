@@ -11,6 +11,9 @@
             return "<i class=\"layui-icon\" style='color:#FF5722;font-weight: 900;font-size: 18px;' title='"+errorText+"'>&#x1006;</i>";
         }
     </script>
+    <style>
+        .layui-elem-field legend{font-size:16px}
+    </style>
 </head>
 <body>
 
@@ -18,6 +21,7 @@
 <@main.tplLeftTopBt />
 <@main.tplSearchFrom />
 <@main.tplTableGrid />
+<@main.defaultButtonTpl />
 <script type="text/javascript" src="/layui/tableIncubator.js"></script>
 <#include "${springMacroRequestContext.getRequestUri()}.ftl">
 <div id="navbar">

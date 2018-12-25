@@ -32,28 +32,25 @@
 <script type="text/javascript" src="/layui/formIncubator.js"></script>
 <form class="layui-form" id="aform" action="" style="padding-top:20px;"></form>
 <script type="text/javascript">
-var page_save_ajax = function(filterName)
-{
-    layui.form.on('submit('+filterName+')', function(data){
-        var $ = layui.jquery;
-        //layer.alert($("#aform").serialize(), {title: '最终的提交信息'});
-        $.ajax({
-            url:"save",
-            data:$("#aform").serialize(),
-            type:'post',
-            dataType:"json",
-            success:function(data){
-                if(data.action=="success"){window.parent.auto_initDataGrid(window.parent.urlStr,window.parent._pageNum);layer.alert("保存成功",{time:2000,icon:1},function(){
-                    window.parent.closeOpenPage();
-                }); setTimeout(function(){ window.parent.closeOpenPage();},2000); }
-                else{
-                    layer.alert("保存失败 "+data.msg,{time:2000,icon:2});
+    var page_save_ajax = function(filterName)
+    {
+        layui.form.on('submit('+filterName+')', function(data){
+            //layer.alert($("#aform").serialize(), {title: '最终的提交信息'});
+            $.post({
+                url:"save",
+                data:$("#aform").serialize(),
+                success:function(data){
+                    if(data.action=="success"){window.parent.reload();layer.alert("保存成功",{time:2000,icon:1},function(){
+                        window.parent.closeOpenPage();
+                    }); setTimeout(function(){ window.parent.closeOpenPage();},2000); }
+                    else{
+                        layer.alert("保存失败 "+data.msg,{time:2000,icon:2});
+                    }
                 }
-            }
+            });
+            return false;// 使用ajax提交表单，阻止form提交
         });
-        return false;// 使用ajax提交表单，阻止form提交
-    });
-}
+    }
 var page_save = function(filterName)
 {
     layui.form.on('submit('+filterName+')', function(data){

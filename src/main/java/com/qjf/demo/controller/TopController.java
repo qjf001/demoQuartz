@@ -23,4 +23,8 @@ public class TopController {
         return "/admin/layuiAdmin/main";
     }
 
+    @RequestMapping(value="admin/portal",method = RequestMethod.GET)
+    public String portal(){
+        return "/admin/portal/portal";
+    }
 }

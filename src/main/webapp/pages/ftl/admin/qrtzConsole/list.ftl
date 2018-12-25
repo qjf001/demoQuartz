@@ -36,13 +36,11 @@
     </div>
 </script>
 <script type="text/javascript">
-    var title = "定時任務列表";
     var bts = [
         {btName: "新增", clickEvent: "openPage('edit','编辑定時任務',true,2);", icon: "&#xe608;",classes:"layui-btn-sm"},
         {btName: "暂停调度",id:"shutdown",style:"display:none;" ,clickEvent: "startOrShutdown();", icon: "&#xe651;",classes:"layui-btn layui-btn-danger"},
         {btName: "开始调度",id:"start",style:"display:none;" ,clickEvent: "startOrShutdown();", icon: "&#xe652;",classes:"layui-btn layui-btn-danger"}
     ];
-    var searchInputs = [];
     var columns = [
         {title: 'ID', field: 'id', width: 60, align: 'center'},
         {title: '任務名稱', field: 'name', width: 60, align: 'center'},
@@ -60,10 +58,9 @@
         $.post({
             url:"update",
             data:{"id":id},
-            dataType:"json",
             success:function(data){
                 if(data.action==='success'){
-                    window.parent.auto_initDataGrid(window.urlStr,window._pageNum);
+                    window.parent.reload();
                     layui.layer.alert("操作成功",{icon: 1, title:'提示'},function(index){
                         layer.close(index);
                     });

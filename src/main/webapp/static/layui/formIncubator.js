@@ -3,10 +3,15 @@
  */
 layui.use(['form', 'layedit', 'laydate','laytpl','jquery','upload'], function(){
     var form = layui.form,$=layui.jquery;
+    if(window.formRows && window.formRows[window.formRows.length-1].type != 'button')
+        window.formRows.push({type:"button",formName:"buttonGroup", options:[
+                {btName:"保存",filterName:"save",laySubmit:true,type:"button",clickEvent:"page_save_ajax('save');"},
+                {btName:"重置",btId:"reset",type:"reset"}
+            ]});
     // 绘制表单
     if(window.formRows){
         layui.laytpl(formTpl.innerHTML).render(window.formRows, function(html){
-            aform.innerHTML = html;
+            aform.innerHTML = html; if(typeof formReady === "function") {formReady();}
         });
     }
 
@@ -15,7 +20,10 @@ layui.use(['form', 'layedit', 'laydate','laytpl','jquery','upload'], function(){
         layui.upload.render({
             elem:'#'+bindElem
             ,url: uploadUrl
-            ,ext: 'jpg|jpeg|png|gif' //只会支持这三种格式的上传。注意是用|分割。
+            ,accept:'images'
+            ,size:2048
+            ,exts: 'jpg|jpeg|png|gif' //只会支持这三种格式的上传。注意是用|分割。
+            ,acceptMime: 'image/jpg, image/png,image/jpeg,image/gif'
             ,done: upload_success_fun
         });
     }
@@ -51,27 +59,13 @@ layui.use(['form', 'layedit', 'laydate','laytpl','jquery','upload'], function(){
 
     form.render();
 
-    $.each($('textarea'),function(i,v){
-        if($(this).attr("maxlength")){
-            $(this).attr('oninput','changeLimit($(this));');
-            $(this).after('<span class="textLimit">'+$(this).attr("maxlength")+'</span>');/*$(this).on('input',changeLimit($(this)));*/
-            $(this).trigger("oninput");
-        }
+    $(function () {
+        $.each($('textarea'), function (i, v) {
+            if ($(this).attr("maxlength")) {
+                $(this).after('<span class="textLimit">' + $(this).attr("maxlength") + '</span>');
+                $(this).on('oninput',changeLimit($(this)));
+                $(this).trigger("oninput");
+            }
+        });
     });
-
 });
-/* 提升到header中
-var changeLimit = function(obj)
-{
-    var total = 0;// 統計回車
-    var tvalu = obj.val();
-    for(var i= 0;i<tvalu.length;i++)
-    {
-        var ch = tvalu.substr(i,1);
-        if(ch==='\n')
-            total += 1;
-    }
-    var limit = (obj.attr("maxlength")-obj.val().length-total);
-    if(limit < 0) obj.next().html(0); else obj.next().html(limit);
-    if(limit <= 0) obj.val(obj.val().substr(0,obj.attr("maxlength")-total));
-}*/

@@ -55,9 +55,17 @@ public class QrtzConsoleController extends BasicController {
      */
     @ResponseBody
     @RequestMapping(value = "listData",method = RequestMethod.GET,produces = {"application/json;charset=UTF-8"})
-    public MyPage<QrtzConsole> listData(Page<QrtzConsole> page, HttpServletRequest req){
-        EntityWrapper<QrtzConsole> wrapper = new EntityWrapper<>();
-        return new MyPage(qrtzConsoleService.selectPage(page,wrapper));
+    public Map listData(Page<QrtzConsole> page, HttpServletRequest req){
+        ResultMap rm = new ResultMap();
+        try {
+            EntityWrapper<QrtzConsole> wrapper = new EntityWrapper<>();
+            rm.put("page", new MyPage(qrtzConsoleService.selectPage(page,wrapper)));
+            rm.setSuccess();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        return rm;
+
     }
 
     @RequestMapping(value="edit",method = RequestMethod.GET)
